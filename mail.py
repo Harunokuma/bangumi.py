@@ -15,15 +15,17 @@ from email.mime.application import MIMEApplication
 from email.utils import parseaddr, formataddr, formatdate
 import os
 import smtplib
-
-abspath = os.path.dirname(__file__)
-torrentDirPath = os.path.join(abspath, "torrent")
+import logging
 
 def _format_addr(s):
     name, addr = parseaddr(s)
     return formataddr((Header(name, 'utf-8').encode(), addr))
 
 def sendTorrent(toAddrs, torrents):
+    logger = logging.getLogger("bangumiLogger")
+    abspath = os.path.dirname(__file__)
+    torrentDirPath = os.path.join(abspath, "torrent")
+
     # 接收参数: 发件人地址
     from_addr = 'kumanobangumi@163.com'
     # 接收参数: 客户端授权密码
@@ -75,11 +77,14 @@ def sendTorrent(toAddrs, torrents):
         # 发送邮件
         server.sendmail(from_addr, to_addrs, msg.as_string())
 
-        print('Send a mail to %s' % to_addrs)
+        for torrent in torrents:
+            logger.info("Send a mail to %s, which include [%s][%s]" % (to_addrs, torrent['title'], torrent['num']))
+        # print('Send a mail to %s' % to_addrs)
 
     except smtplib.SMTPException as e:
-        print(e)
-        print('Send mail fail')
+        logger.error("Send mail to %s failed" % to_addrs, exc_info=True)
+        # print(e)
+        # print('Send mail fail')
 
     finally:
         # 退出SMTP服务器

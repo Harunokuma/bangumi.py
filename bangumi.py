@@ -30,7 +30,7 @@ torrentDirPath = os.path.join(abspath, "torrent")
 magnetDirPath = os.path.join(abspath, "magnet")
 
 # logging参数
-logger = logging.getLogger("animeLogger")
+logger = logging.getLogger("bangumiLogger")
 
 # 更新动画所用的线程
 class updateThread (threading.Thread):
@@ -41,7 +41,7 @@ class updateThread (threading.Thread):
 		self.total_num = total_num
 	def run(self):
 		updateEachTorrent(self.name, self.num, self.total_num)
-		print("Update", self.name, "over")
+		# print("Update", self.name, "over")
 
 # 搜索是否有满足要求的资源页面
 def searchUrl(name, num):
@@ -74,6 +74,7 @@ def getTorrent(suburl, name, num):
 	html = requests.get(url, headers = headers).content
 	bsObj = BeautifulSoup(html, "html.parser")
 
+	# 下载磁链的代码
 	for link in bsObj.findAll("a", {"id":"magnet"}):
 		if 'href' in link.attrs:
 			magnet = bytes(link.attrs['href'], encoding='utf8')
@@ -88,6 +89,7 @@ def getTorrent(suburl, name, num):
 				logger.info('[%s][%s] update success' %(name, num))
 				return True
 
+	# 下载种子代码，目前会出现部分链接下的种子下载失败的bug，有待改正
 	# for link in bsObj.findAll("a", {"id":"download"}):
 	# 	if 'href' in link.attrs:
 	# 		download_url = MAIN_URL + link.attrs['href']
@@ -127,7 +129,7 @@ def updateAllTorrent():
 
 	# 测试是否能连接至主站
 	if not testConnect(MAIN_URL):
-		print("Can't connect to", MAIN_URL)
+		# print("Can't connect to", MAIN_URL)
 		return
 
 	# 获取数据库中的所有动画数据
@@ -151,7 +153,7 @@ def updateAllTorrent():
 	pushToUser()
 
 	global_conn.close()
-	print("Update Over!")
+	# print("Update Over!")
 
 # 将更新的动画推送给用户
 def pushToUser():
@@ -189,10 +191,11 @@ def pushToUser():
 			cur_2 = global_conn.cursor()
 			cur_2.execute("UPDATE %s SET num = %d WHERE mail = '%s' AND title = '%s'" %(db_userTbl ,num, mail, title))
 			cur_2.close()
-			global_conn.commit()
+		cur.close()
 		if len(torrents) > 0:
 			sendTorrent(mail, torrents)
-		cur.close()
+			global_conn.commit()
+		
 
 # 对单个动画进行更新
 def updateEachTorrent(name, num, total_num):
@@ -216,12 +219,12 @@ def updateEachTorrent(name, num, total_num):
 			cur = conn.cursor()
 			cur.execute('UPDATE %s SET num = num + 1 WHERE title = "%s"' % (db_bangumiTbl ,name))
 			num = num + 1
-			print("Update %s %s" %(name, str_num))
+			# print("Update %s %s" %(name, str_num))
 			conn.commit()
 			cur.close()
 		else:
 			break
-	logger.info('%s update over, the leatest is %d' % (name, num))
+	logger.info('[%s] update over, the leatest is %d' % (name, num))
 
 # 重置所有未完结动画下载的记录（调试用）
 def resetDownload():
@@ -229,7 +232,7 @@ def resetDownload():
 	cur.execute("UPDATE %s SET num = 0 WHERE num < total_num" % db_bangumiTbl)
 	global_conn.commit()
 	cur.close()
-	print("Reset Over!")
+	# print("Reset Over!")
 
 # 向数据库中添加一个动画
 def addAnime(name):
@@ -237,7 +240,7 @@ def addAnime(name):
 	cur.execute('INSERT INTO %s (title) VALUES ("%s")' % (db_bangumiTbl ,name))
 	global_conn.commit()
 	cur.close()
-	print("Add anime Over!")
+	# print("Add anime Over!")
 
 # 测试是否能连接至主站
 def testConnect(url):
@@ -252,7 +255,7 @@ def testConnect(url):
 
 # 设置日志格式
 def setupLogging():
-	logger = logging.getLogger("animeLogger")
+	logger = logging.getLogger("bangumiLogger")
 	handler = logging.handlers.RotatingFileHandler(os.path.join(abspath,'anime.log'), maxBytes=1024*1024, backupCount = 5)
 	formatter = logging.Formatter(fmt="%(asctime)s - %(levelname)s - %(filename)s - %(lineno)d - %(message)s")
 	handler.setFormatter(formatter)

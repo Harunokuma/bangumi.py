@@ -1,0 +1,1 @@
+magnet:?xt=urn:btih:4a550b472ab980093c061e9d10bb3d7540d705fe&tr=http://open.acgtracker.com:1096/announce
