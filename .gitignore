@@ -44,3 +44,5 @@ Temporary Items
 torrent
 video
 *.torrent
+__pycache__
+.vscode
